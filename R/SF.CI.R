@@ -114,6 +114,7 @@ SF.CI <- function(
     PCA = eigen( t(XX) %*% XX )
     hFF = as.matrix(PCA$vectors[,1:K] * sqrt(tt))   # tt*KK
     hBB = XX %*% hFF / tt
+    psi_it = hBB %*% t(hFF)
 
     ## Predictors
     hFF.cov = sir.cov(hFF, yy, discretization, nslices)
@@ -126,7 +127,7 @@ SF.CI <- function(
 
     epsmat = cbind(eps_SF_LML, eps_SF_LLRL)
     colnames(epsmat) <- c("SF_LML", 'SF_LLRL')
-    return(epsmat)
+    return(list(epsmat = cbind(eps_SF_LML, eps_SF_LLRL), psi_it = psi_it))
   }
 
   pyhat <- function(epsvec)
@@ -136,59 +137,62 @@ SF.CI <- function(
     return(pvalue)
   }
 
-  SF_conformal <- function(yy, XX)
-  {
+    # 修改 SF_conformal() 函数：接收 psi_it 但不干扰原有输出
+  SF_conformal <- function(yy, XX) {
     Tlast = length(yy)
-    y.grid = c(seq(min(yy)-2*sd(yy),max(yy)+2*sd(yy),length=200))
-
-    # y-hat
-    eps.hat = hateps(yy, XX)
-    yhat = SF.SIR(y = y,X = X,newX = newX, type = type,
-                  K = K, L = L, discretization = discretization,
-                  nslices = nslices)
-
-    # CI
-    p.vec = matrix(NA,length(y.grid),2)
+    # 调用 hateps() 并获取残差和 psi_it
+    eps_result = hateps(yy, XX)
+    eps.hat = eps_result$epsmat
+    psi_it = eps_result$psi_it
+    
+    # 原有预测和置信区间计算逻辑（完全不变）
+    yhat = SF.SIR(y = y, X = X, newX = newX, type = type, K = K, L = L,
+                 discretization = discretization, nslices = nslices)
+    y.grid = c(seq(min(yy)-2*sd(yy), max(yy)+2*sd(yy), length=200))
+    p.vec = matrix(NA, length(y.grid), 2)
     colnames(p.vec) <- c('SF_LML', 'SF_LLRL')
-    for (i in 1:length(y.grid)){
+    for (i in 1:length(y.grid)) {
       yy[Tlast] = y.grid[i]
-      eps.hat.mat = hateps(yy, XX)
+      eps.hat.mat = hateps(yy, XX)$epsmat
       p.vec[i,] = apply(eps.hat.mat, 2, pyhat)
     }
     ci_SF_LML  = y.grid[p.vec[,'SF_LML']>alpha]
     ci_SF_LLRL = y.grid[p.vec[,'SF_LLRL']>alpha]
-
     ci_lower = c(min(ci_SF_LML), min(ci_SF_LLRL))
     ci_upper = c(max(ci_SF_LML), max(ci_SF_LLRL))
     resultmat = rbind(yhat, ci_lower, ci_upper)
-    return(round(resultmat,4))
+    
+    # 返回原有结果 + psi_it
+    return(list(result = round(resultmat, 4), psi_it = psi_it))
   }
-  # in-sample
-  if(is.null(newX)){
-    ## LM
-    out <- SF_conformal(y,X)
-    if(type == "LM"){
-      return(out[,1])
+
+  if (is.null(newX)) {
+    out <- SF_conformal(y, X)
+    if (type == "LM") {
+      return(list(yhat = out$result[,1], 
+                 ci_lower = out$result[2,1], 
+                 ci_upper = out$result[3,1],
+                 psi_it = out$psi_it))  # 新增 psi_it
+    } else if (type == "LLM") {
+      return(list(yhat = out$result[,2], 
+                 ci_lower = out$result[2,2], 
+                 ci_upper = out$result[3,2],
+                 psi_it = out$psi_it))  # 新增 psi_it
     }
-    ## LLM
-    if(type == "LLM"){
-      return(out[,2])
-    }
-  }
-  # out-of-sample
-  if(!is.null(newX)){
-    ## XX pp by tt+1
-    ## y tt+1 by 1
-    cX <- cbind(X,newX)
-    cy <- c(y,mean(y))
-    ## LM
-    out <- SF_conformal(cy,cX)
-    if(type == "LM"){
-      return(out[,1])
-    }
-    ## LLM
-    if(type == "LLM"){
-      return(out[,2])
+  } else {
+    cX <- cbind(X, newX)
+    cy <- c(y, mean(y))
+    out <- SF_conformal(cy, cX)
+    if (type == "LM") {
+      return(list(yhat = out$result[,1], 
+                 ci_lower = out$result[2,1], 
+                 ci_upper = out$result[3,1],
+                 psi_it = out$psi_it))  # 新增 psi_it
+    } else if (type == "LLM") {
+      return(list(yhat = out$result[,2], 
+                 ci_lower = out$result[2,2], 
+                 ci_upper = out$result[3,2],
+                 psi_it = out$psi_it))  # 新增 psi_it
     }
   }
 }
