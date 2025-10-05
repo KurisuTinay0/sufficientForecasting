@@ -126,7 +126,7 @@ SF.CI <- function(
 
     epsmat = cbind(eps_SF_LML, eps_SF_LLRL)
     colnames(epsmat) <- c("SF_LML", 'SF_LLRL')
-    return(list(epsmat = epsmat, predictor = predictor, Phi.h = Phi.h, hFF = hFF))
+    return(list(epsmat = epsmat, predictor = Predictor, Phi.h = Phi.h, hFF = hFF))
   }
 
   pyhat <- function(epsvec)
