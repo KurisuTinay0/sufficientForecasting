@@ -157,30 +157,50 @@ SF.CI <- function(
     resultmat = rbind(yhat, ci_lower, ci_upper)
     return(list(resultmat = round(resultmat, 4),eps.list = eps.hat))
   }
+    
   # in-sample
   if(is.null(newX)){
-    out <- SF_conformal(y, X)
+    conformal_result <- SF_conformal(y, X)
+    eps_result <- hateps(y, X)
     if(type == "LM"){
-      # 获取预测索引（通过调用 hateps 函数）
-      eps_result <- hateps(y, X)
-      predictor <- eps_result$predictor  # 假设 hateps 现在返回包含 predictor 的列表
-      return(list(forecast = out[, 1], predictor = predictor))
+      return(list(
+        forecast = conformal_result$resultmat[1, 1],
+        ci_lower = conformal_result$resultmat[2, 1],
+        ci_upper = conformal_result$resultmat[3, 1],
+        predictor = eps_result$predictor
+      ))
     }
     if(type == "LLM"){
-      return(list(forecast = out[, 2], predictor = predictor))
+      return(list(
+        forecast = conformal_result$resultmat[1, 2],
+        ci_lower = conformal_result$resultmat[2, 2],
+        ci_upper = conformal_result$resultmat[3, 2],
+        predictor = eps_result$predictor
+      ))
     }
   }
   # out-of-sample
   if(!is.null(newX)){
-    out <- SF_conformal(y, X)
+    cX <- cbind(X,newX)
+    cy <- c(y,mean(y))
+    conformal_result <- SF_conformal(cy, cX)
+    eps_result <- hateps(cy, cX)
     if(type == "LM"){
-      # 获取预测索引（通过调用 hateps 函数）
-      eps_result <- hateps(y, X)
-      predictor <- eps_result$predictor  # 假设 hateps 现在返回包含 predictor 的列表
-      return(list(forecast = out[, 1], predictor = predictor))
+      return(list(
+        forecast = conformal_result$resultmat[1, 1],
+        ci_lower = conformal_result$resultmat[2, 1],
+        ci_upper = conformal_result$resultmat[3, 1],
+        predictor = eps_result$predictor
+      ))
     }
+    ## LLM
     if(type == "LLM"){
-      return(list(forecast = out[, 2], predictor = predictor))
+      return(list(
+        forecast = conformal_result$resultmat[1, 2],
+        ci_lower = conformal_result$resultmat[2, 2],
+        ci_upper = conformal_result$resultmat[3, 2],
+        predictor = eps_result$predictor
+      ))
     }
   }
 }
