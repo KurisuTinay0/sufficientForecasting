@@ -157,7 +157,8 @@ SF.CI <- function(
     resultmat = rbind(yhat, ci_lower, ci_upper)
     return(list(resultmat = round(resultmat, 4),eps.list = eps.hat))
   }
-    
+
+  newX = Null
   # in-sample
   if(is.null(newX)){
     conformal_result <- SF_conformal(y, X)
