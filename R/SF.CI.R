@@ -114,7 +114,7 @@ SF.CI <- function(
     PCA = eigen( t(XX) %*% XX )
     hFF = as.matrix(PCA$vectors[,1:K] * sqrt(tt))   # tt*KK
     hBB = XX %*% hFF / tt
-    psi_it = hBB %*% t(hFF)
+    psi_transpose_ft = t(hBB) %*% hFF
 
     ## Predictors
     hFF.cov = sir.cov(hFF, yy, discretization, nslices)
@@ -127,7 +127,7 @@ SF.CI <- function(
 
     epsmat = cbind(eps_SF_LML, eps_SF_LLRL)
     colnames(epsmat) <- c("SF_LML", 'SF_LLRL')
-    return(list(epsmat = cbind(eps_SF_LML, eps_SF_LLRL), psi_it = psi_it))
+    return(list(epsmat = cbind(eps_SF_LML, eps_SF_LLRL), psi_transposse_ft = psi_transposse_ft))
   }
 
   pyhat <- function(epsvec)
@@ -137,13 +137,13 @@ SF.CI <- function(
     return(pvalue)
   }
 
-    # 修改 SF_conformal() 函数：接收 psi_it 但不干扰原有输出
+    # 修改 SF_conformal() 函数：接收 psi_transposse_ft 但不干扰原有输出
   SF_conformal <- function(yy, XX) {
     Tlast = length(yy)
-    # 调用 hateps() 并获取残差和 psi_it
+    # 调用 hateps() 并获取残差和 psi_transposse_ft
     eps_result = hateps(yy, XX)
     eps.hat = eps_result$epsmat
-    psi_it = eps_result$psi_it
+    psi_transposse_ft = eps_result$psi_transposse_ft
     
     # 原有预测和置信区间计算逻辑（完全不变）
     yhat = SF.SIR(y = y, X = X, newX = newX, type = type, K = K, L = L,
@@ -162,8 +162,8 @@ SF.CI <- function(
     ci_upper = c(max(ci_SF_LML), max(ci_SF_LLRL))
     resultmat = rbind(yhat, ci_lower, ci_upper)
     
-    # 返回原有结果 + psi_it
-    return(list(result = round(resultmat, 4), psi_it = psi_it))
+    # 返回原有结果 + psi_transposse_ft
+    return(list(result = round(resultmat, 4), psi_transposse_ft = psi_transposse_ft))
   }
 
   if (is.null(newX)) {
@@ -172,12 +172,12 @@ SF.CI <- function(
       return(list(yhat = out$result[,1], 
                  ci_lower = out$result[2,1], 
                  ci_upper = out$result[3,1],
-                 psi_it = out$psi_it))  # 新增 psi_it
+                 psi_transposse_ft = out$psi_transposse_ft))  # 新增 psi_transposse_ft
     } else if (type == "LLM") {
       return(list(yhat = out$result[,2], 
                  ci_lower = out$result[2,2], 
                  ci_upper = out$result[3,2],
-                 psi_it = out$psi_it))  # 新增 psi_it
+                 psi_transposse_ft = out$psi_transposse_ft))  # 新增 psi_transposse_ft
     }
   } else {
     cX <- cbind(X, newX)
@@ -187,12 +187,12 @@ SF.CI <- function(
       return(list(yhat = out$result[,1], 
                  ci_lower = out$result[2,1], 
                  ci_upper = out$result[3,1],
-                 psi_it = out$psi_it))  # 新增 psi_it
+                 psi_transposse_ft = out$psi_transposse_ft))  # 新增 psi_transposse_ft
     } else if (type == "LLM") {
       return(list(yhat = out$result[,2], 
                  ci_lower = out$result[2,2], 
                  ci_upper = out$result[3,2],
-                 psi_it = out$psi_it))  # 新增 psi_it
+                 psi_transposse_ft = out$psi_transposse_ft))  # 新增 psi_transposse_ft
     }
   }
 }
