@@ -133,30 +133,29 @@ SF.CI <- function(
 
   SF_conformal <- function(yy, XX)
   {
-    Tlast <- length(yy)
-    y.grid <- c(seq(min(yy)-2*sd(yy),max(yy)+2*sd(yy),length=200))
+    Tlast = length(yy)
+    y.grid = c(seq(min(yy)-2*sd(yy),max(yy)+2*sd(yy),length=200))
 
-    eps.hat <- hateps(yy, XX)
-    yhat <- SF.SIR(y = y,X = X,newX = newX, type = type,
+    eps.hat = hateps(yy, XX)
+    yhat = SF.SIR(y = y,X = X,newX = newX, type = type,
                   K = K, L = L, discretization = discretization,
                   nslices = nslices)
 
     # CI
-    p.vec <- matrix(NA,length(y.grid),2)
+    p.vec = matrix(NA,length(y.grid),2)
     colnames(p.vec) <- c('SF_LML', 'SF_LLRL')
     for (i in 1:length(y.grid)){
-      yy[Tlast] <- y.grid[i]
-      eps.hat.mat <- hateps(yy, XX)
-      p.vec[i,] <- apply(eps.hat.mat, 2, pyhat)
+      yy[Tlast] = y.grid[i]
+      eps.hat.mat = hateps(yy, XX)
+      p.vec[i,] = apply(eps.hat.mat$epsmat, 2, pyhat)
     }
-    ci_SF_LML  <- y.grid[p.vec[,'SF_LML']>alpha]
-    ci_SF_LLRL <- y.grid[p.vec[,'SF_LLRL']>alpha]
+    ci_SF_LML =  y.grid[p.vec[,'SF_LML']>alpha]
+    ci_SF_LLRL = y.grid[p.vec[,'SF_LLRL']>alpha]
 
-    ci_lower <- c(min(ci_SF_LML), min(ci_SF_LLRL))
-    ci_upper <- c(max(ci_SF_LML), max(ci_SF_LLRL))
-    resultmat <- rbind(yhat, ci_lower, ci_upper)
-    return(list(resultmat = round(rbind(yhat, ci_lower, ci_upper), 4),
-                eps.list = eps.hat.list))
+    ci_lower = c(min(ci_SF_LML), min(ci_SF_LLRL))
+    ci_upper = c(max(ci_SF_LML), max(ci_SF_LLRL))
+    resultmat = rbind(yhat, ci_lower, ci_upper)
+    return(list(resultmat = round(resultmat, 4),eps.list = eps.hat))
   }
   # in-sample
   if(is.null(newX)){
