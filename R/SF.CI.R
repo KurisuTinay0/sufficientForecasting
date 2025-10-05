@@ -158,7 +158,7 @@ SF.CI <- function(
     return(list(resultmat = round(resultmat, 4),eps.list = eps.hat))
   }
 
-  newX = Null
+  newX = NULL
   # in-sample
   if(is.null(newX)){
     conformal_result <- SF_conformal(y, X)
