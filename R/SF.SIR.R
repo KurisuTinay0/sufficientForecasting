@@ -29,7 +29,7 @@
 #' SF.SIR(dataExample$y,dataExample$X,type = "LLM")
 #'
 
-SF.SIR <- function(y, X, newX = NULL, type = "LM", K = "default", L = 1,
+SF.SIR <- function(y, X, newX = NULL, type = "LM", K = "default", L = 4,
                    discretization = TRUE, nslices = 10){
   # default K
   if(K == "default"){
