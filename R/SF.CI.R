@@ -28,7 +28,7 @@
 #' utils::data(dataExample,package = "sufficientForecasting")
 #' SF.CI(dataExample$y,dataExample$X,type = "LM",alpha = 0.05)
 SF.CI <- function(
-    y, X, newX = NULL, type = "LM", K = "default", L = 4, alpha = 0.1,
+    y, X, newX = NULL, type = "LM", K = "default", L = 2, alpha = 0.1,
     discretization = TRUE, nslices = 10){
   # default K
   if(K == "default"){
